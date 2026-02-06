@@ -7,6 +7,7 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import frb.axeron.api.core.AxeronSettings
 import java.util.Locale
 
 object LocaleHelper {
@@ -42,10 +43,14 @@ object LocaleHelper {
             return context
         }
 
-        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        val localeTag = prefs.getString("app_locale", "system") ?: "system"
+        val prefs = try {
+            AxeronSettings.getPreferences()
+        } catch (_: Exception) {
+            context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        }
+        val localeTag = prefs.getString(AxeronSettings.LANGUAGE, "system") ?: "system"
 
-        return if (localeTag == "system") {
+        return if (localeTag == "system" || localeTag == "SYSTEM") {
             context
         } else {
             val locale = parseLocaleTag(localeTag)
@@ -119,9 +124,13 @@ object LocaleHelper {
             }
         } else {
             // Android < 13 - get from SharedPreferences
-            val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            val localeTag = prefs.getString("app_locale", "system") ?: "system"
-            if (localeTag == "system") {
+            val prefs = try {
+                AxeronSettings.getPreferences()
+            } catch (_: Exception) {
+                context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            }
+            val localeTag = prefs.getString(AxeronSettings.LANGUAGE, "system") ?: "system"
+            if (localeTag == "system" || localeTag == "SYSTEM") {
                 null // System default
             } else {
                 parseLocaleTag(localeTag)
