@@ -131,12 +131,8 @@ fun AppearanceScreen(navigator: DestinationsNavigator, viewModelGlobal: ViewMode
                         // Add system default first
                         locales.add(java.util.Locale.ROOT) // This will represent "System Default"
 
-                        // Dynamically detect available locales by checking resource directories
-                        val resourceDirs = listOf(
-                            "ar", "bg", "de", "es", "fa", "fr", "hu", "in", "it",
-                            "ja", "ko", "pl", "pt", "pt-rBR", "ru", "th", "tr",
-                            "uk", "vi", "zh", "zh-rCN", "zh-rTW"
-                        )
+                        // Get available locales from LocaleHelper
+                        val resourceDirs = LocaleHelper.supportedLocalesList
 
                         resourceDirs.forEach { dir ->
                             try {

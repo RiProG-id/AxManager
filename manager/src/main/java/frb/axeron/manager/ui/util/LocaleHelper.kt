@@ -11,7 +11,16 @@ import frb.axeron.api.core.AxeronSettings
 import java.util.Locale
 
 object LocaleHelper {
-    
+
+    /**
+     * List of supported locales
+     */
+    val supportedLocalesList = listOf(
+        "ar", "bg", "de", "es", "fa", "fr", "hu", "in", "it",
+        "ja", "ko", "pl", "pt", "pt-rBR", "ru", "th", "tr",
+        "uk", "vi", "zh", "zh-rCN", "zh-rTW"
+    )
+
     /**
      * Check if should use system language settings (Android 13+)
      */
@@ -50,7 +59,7 @@ object LocaleHelper {
         }
         val localeTag = prefs.getString(AxeronSettings.LANGUAGE, "system") ?: "system"
 
-        return if (localeTag == "system" || localeTag == "SYSTEM") {
+        return if (localeTag.lowercase() == "system") {
             context
         } else {
             val locale = parseLocaleTag(localeTag)
@@ -130,7 +139,7 @@ object LocaleHelper {
                 context.getSharedPreferences("settings", Context.MODE_PRIVATE)
             }
             val localeTag = prefs.getString(AxeronSettings.LANGUAGE, "system") ?: "system"
-            if (localeTag == "system" || localeTag == "SYSTEM") {
+            if (localeTag.lowercase() == "system") {
                 null // System default
             } else {
                 parseLocaleTag(localeTag)
