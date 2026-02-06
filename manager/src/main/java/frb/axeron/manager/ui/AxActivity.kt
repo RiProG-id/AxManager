@@ -103,6 +103,10 @@ class AxActivity : ComponentActivity() {
 
     private var intentState: Intent? by mutableStateOf(null)
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(LocaleHelper.applyLanguage(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

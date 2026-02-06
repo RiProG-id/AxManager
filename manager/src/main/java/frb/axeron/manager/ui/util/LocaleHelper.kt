@@ -7,9 +7,17 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import frb.axeron.api.core.AxeronSettings
 import java.util.Locale
 
 object LocaleHelper {
+
+    /**
+     * List of supported locales
+     */
+    val supportedLocalesList = listOf(
+        "de", "es", "fr", "in", "pt", "ru", "zh"
+    )
 
     /**
      * Check if should use system language settings (Android 13+)
@@ -42,10 +50,14 @@ object LocaleHelper {
             return context
         }
 
-        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        val localeTag = prefs.getString("app_locale", "system") ?: "system"
+        val prefs = try {
+            AxeronSettings.getPreferences()
+        } catch (_: Exception) {
+            context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        }
+        val localeTag = prefs.getString(AxeronSettings.LANGUAGE, "system") ?: "system"
 
-        return if (localeTag == "system") {
+        return if (localeTag.lowercase() == "system") {
             context
         } else {
             val locale = parseLocaleTag(localeTag)
@@ -119,9 +131,13 @@ object LocaleHelper {
             }
         } else {
             // Android < 13 - get from SharedPreferences
-            val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            val localeTag = prefs.getString("app_locale", "system") ?: "system"
-            if (localeTag == "system") {
+            val prefs = try {
+                AxeronSettings.getPreferences()
+            } catch (_: Exception) {
+                context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            }
+            val localeTag = prefs.getString(AxeronSettings.LANGUAGE, "system") ?: "system"
+            if (localeTag.lowercase() == "system") {
                 null // System default
             } else {
                 parseLocaleTag(localeTag)

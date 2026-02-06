@@ -131,12 +131,8 @@ fun AppearanceScreen(navigator: DestinationsNavigator, viewModelGlobal: ViewMode
                         // Add system default first
                         locales.add(java.util.Locale.ROOT) // This will represent "System Default"
 
-                        // Dynamically detect available locales by checking resource directories
-                        val resourceDirs = listOf(
-                            "ar", "bg", "de", "fa", "fr", "hu", "in", "it",
-                            "ja", "ko", "pl", "pt-rBR", "ru", "th", "tr",
-                            "uk", "vi", "zh-rCN", "zh-rTW"
-                        )
+                        // Get available locales from LocaleHelper
+                        val resourceDirs = LocaleHelper.supportedLocalesList
 
                         resourceDirs.forEach { dir ->
                             try {
@@ -183,10 +179,8 @@ fun AppearanceScreen(navigator: DestinationsNavigator, viewModelGlobal: ViewMode
                     val allOptions = supportedLocales.map { locale ->
                         val tag = if (locale == java.util.Locale.ROOT) {
                             "system"
-                        } else if (locale.country.isEmpty()) {
-                            locale.language
                         } else {
-                            "${locale.language}_${locale.country}"
+                            locale.toLanguageTag()
                         }
 
                         val displayName = if (locale == java.util.Locale.ROOT) {
@@ -198,7 +192,7 @@ fun AppearanceScreen(navigator: DestinationsNavigator, viewModelGlobal: ViewMode
                         tag to displayName
                     }
 
-                    val currentLocale = prefs.getString("app_locale", "system") ?: "system"
+                    val currentLocale = prefs.getString(AxeronSettings.LANGUAGE, "system") ?: "system"
                     val options = allOptions.map { (tag, displayName) ->
                         ListOption(
                             titleText = displayName,
@@ -216,7 +210,7 @@ fun AppearanceScreen(navigator: DestinationsNavigator, viewModelGlobal: ViewMode
                             onFinishedRequest = {
                                 if (selectedIndex >= 0 && selectedIndex < allOptions.size) {
                                     val newLocale = allOptions[selectedIndex].first
-                                    prefs.edit { putString("app_locale", newLocale) }
+                                    prefs.edit { putString(AxeronSettings.LANGUAGE, newLocale) }
 
                                     // Update local state immediately
                                     currentAppLocale = LocaleHelper.getCurrentAppLocale(context)

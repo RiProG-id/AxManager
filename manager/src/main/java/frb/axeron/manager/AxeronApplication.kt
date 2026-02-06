@@ -41,9 +41,9 @@ class AxeronApplication : Engine() {
     lateinit var okhttpClient: OkHttpClient
 
     override fun attachBaseContext(base: Context?) {
-        super.attachBaseContext(base)
         axeronApp = this
-        AxeronSettings.initialize(axeronApp)
+        base?.let { AxeronSettings.initialize(it) }
+        super.attachBaseContext(base?.let { LocaleHelper.applyLanguage(it) } ?: base)
     }
 
     @SuppressLint("ResourceType")
