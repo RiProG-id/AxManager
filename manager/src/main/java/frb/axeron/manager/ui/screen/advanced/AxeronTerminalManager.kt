@@ -70,7 +70,7 @@ class AxeronTerminalManager(private val application: Application) {
                                 val read = withContext(Dispatchers.IO) { inputStream.read(buffer) }
                                 if (read == -1) break
                                 if (read > 0) {
-                                    Log.d("AxeronTerminalManager", "LOG: Output received from Axeron (stdout)")
+                                    Log.d("AxeronTerminalManager", "LOG: Output received from Axeron")
                                     _shellOutput.emit(buffer.copyOfRange(0, read))
                                 }
                             }
@@ -87,7 +87,7 @@ class AxeronTerminalManager(private val application: Application) {
                                 val read = withContext(Dispatchers.IO) { errorStream.read(buffer) }
                                 if (read == -1) break
                                 if (read > 0) {
-                                    Log.d("AxeronTerminalManager", "LOG: Output received from Axeron (stderr)")
+                                    Log.d("AxeronTerminalManager", "LOG: Output received from Axeron")
                                     _shellOutput.emit(buffer.copyOfRange(0, read))
                                 }
                             }
@@ -138,7 +138,7 @@ class AxeronTerminalManager(private val application: Application) {
                 process?.outputStream?.let {
                     it.write(data)
                     it.flush()
-                    Log.i("AxeronTerminalManager", "LOG: Data written to Axeron stdin")
+                    Log.i("AxeronTerminalManager", "LOG: Input sent to Axeron stdin")
                 }
             } catch (e: Exception) {
                 Log.e("AxeronTerminalManager", "Write error: ${e.message}")

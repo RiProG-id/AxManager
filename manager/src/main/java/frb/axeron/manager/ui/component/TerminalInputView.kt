@@ -29,14 +29,14 @@ class TerminalInputView(context: Context) : View(context) {
         return object : BaseInputConnection(this, false) {
             override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean {
                 text?.let {
-                    Log.i("TerminalInputView", "LOG: Keyboard input received: $it")
+                    Log.i("TerminalInputView", "LOG: Keyboard input captured")
                     onTextInput(it.toString())
                 }
                 return true
             }
 
             override fun sendKeyEvent(event: KeyEvent): Boolean {
-                Log.i("TerminalInputView", "LOG: Physical key event: ${event.keyCode} action: ${event.action}")
+                Log.i("TerminalInputView", "LOG: Keyboard input captured")
                 if (event.action == KeyEvent.ACTION_DOWN) {
                     onKeyDown(event.keyCode, event)
                 }
@@ -60,7 +60,7 @@ class TerminalInputView(context: Context) : View(context) {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK) return false
-        Log.i("TerminalInputView", "LOG: Key event received: $keyCode")
+        Log.i("TerminalInputView", "LOG: Keyboard input captured")
         onActionKey(keyCode)
         return true
     }

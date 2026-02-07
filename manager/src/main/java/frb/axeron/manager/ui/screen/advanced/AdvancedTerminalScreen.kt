@@ -127,11 +127,11 @@ fun AdvancedTerminalView(
                 factory = { ctx ->
                     TerminalInputView(ctx).apply {
                         onTextInput = { text ->
-                            Log.d("AdvancedTerminal", "LOG: Keyboard input received: $text")
+                            Log.d("AdvancedTerminal", "LOG: Keyboard input captured")
                             viewModel.sendInput(text)
                         }
                         onActionKey = { keyCode ->
-                            Log.d("AdvancedTerminal", "LOG: Action key received: $keyCode")
+                            Log.d("AdvancedTerminal", "LOG: Keyboard input captured")
                             when (keyCode) {
                                 android.view.KeyEvent.KEYCODE_ENTER -> viewModel.sendInput("\n")
                                 android.view.KeyEvent.KEYCODE_DEL -> viewModel.sendRaw(byteArrayOf(0x7f))
