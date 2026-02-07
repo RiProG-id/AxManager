@@ -4,11 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,9 +12,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -37,14 +30,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -53,18 +42,12 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.LineHeightStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fox2code.androidansi.ktx.parseAsAnsiAnnotatedString
 import com.ramcosta.composedestinations.annotation.Destination
@@ -78,9 +61,8 @@ import frb.axeron.manager.ui.component.CheckBoxText
 import frb.axeron.manager.ui.component.KeyEventBlocker
 import frb.axeron.manager.ui.component.SettingsItem
 import frb.axeron.manager.ui.component.SettingsItemExpanded
-import frb.axeron.manager.ui.component.TerminalControlPanel
-import frb.axeron.manager.ui.component.TerminalInputView
 import frb.axeron.manager.ui.util.LocalSnackbarHost
+import com.ramcosta.composedestinations.generated.destinations.AdvancedTerminalScreenDestination
 import frb.axeron.manager.ui.util.PrefsEnumHelper
 import frb.axeron.manager.ui.viewmodel.QuickShellViewModel
 import frb.axeron.manager.ui.viewmodel.ViewModelGlobal
@@ -98,7 +80,6 @@ import java.util.Locale
 fun QuickShellScreen(navigator: DestinationsNavigator, viewModelGlobal: ViewModelGlobal) {
     val viewModel: QuickShellViewModel = viewModel()
     val running = viewModel.isRunning
-    val isAdvancedMode = viewModel.isAdvancedMode
 
     val listState = rememberLazyListState()
     val logs = remember { mutableStateListOf<QuickShellViewModel.Output>() }
@@ -146,43 +127,40 @@ fun QuickShellScreen(navigator: DestinationsNavigator, viewModelGlobal: ViewMode
 
     Scaffold(
         topBar = {
-            AnimatedVisibility(
-                visible = !isAdvancedMode,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(R.string.quick_shell),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.quick_shell),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                },
+                actions = {
+                    IconButton(onClick = {
+                        navigator.navigate(AdvancedTerminalScreenDestination) {
+                            launchSingleTop = true
+                        }
+                    }) {
+                        Icon(
+                            Icons.Outlined.Terminal,
+                            contentDescription = stringResource(R.string.advanced_mode),
                         )
-                    },
-                    actions = {
-                        IconButton(onClick = { viewModel.toggleAdvancedMode() }) {
-                            Icon(
-                                if (isAdvancedMode) Icons.Filled.Terminal else Icons.Outlined.Terminal,
-                                contentDescription = stringResource(R.string.advanced_mode),
-                                tint = if (isAdvancedMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        IconButton(onClick = { viewModel.stop() }, enabled = running) {
-                            Icon(Icons.Filled.Stop, contentDescription = null)
-                        }
-                        IconButton(onClick = { viewModel.clear() }, enabled = logs.isNotEmpty()) {
-                            Icon(Icons.Filled.ClearAll, contentDescription = null)
-                        }
-                        IconButton(onClick = { showExtraDialog = true }) {
-                            Icon(Icons.Outlined.MoreVert, null)
-                        }
                     }
-                )
-            }
+                    IconButton(onClick = { viewModel.stop() }, enabled = running) {
+                        Icon(Icons.Filled.Stop, contentDescription = null)
+                    }
+                    IconButton(onClick = { viewModel.clear() }, enabled = logs.isNotEmpty()) {
+                        Icon(Icons.Filled.ClearAll, contentDescription = null)
+                    }
+                    IconButton(onClick = { showExtraDialog = true }) {
+                        Icon(Icons.Outlined.MoreVert, null)
+                    }
+                }
+            )
         },
         floatingActionButton = {
             AnimatedVisibility(
-                visible = !isAdvancedMode && fabVisible && logs.isNotEmpty(),
+                visible = fabVisible && logs.isNotEmpty(),
                 enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
                 exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
             ) {
@@ -214,35 +192,27 @@ fun QuickShellScreen(navigator: DestinationsNavigator, viewModelGlobal: ViewMode
 
         KeyboardVisibilityListener { visible ->
             keyboardVisible = visible
-            if (!visible && !isAdvancedMode) {
+            if (!visible) {
                 focusManager.clearFocus()
             }
         }
 
         Box(
             Modifier
-                .padding(if (isAdvancedMode) PaddingValues(0.dp) else paddingValues)
+                .padding(paddingValues)
                 .fillMaxSize()
         ) {
             LaunchedEffect(viewModel.clear) { logs.clear() }
 
             LaunchedEffect(logs.size) {
-                if (logs.isNotEmpty() && !isAdvancedMode) {
+                if (logs.isNotEmpty()) {
                     listState.animateScrollToItem(logs.lastIndex)
-                }
-            }
-
-            LaunchedEffect(isAdvancedMode) {
-                if (isAdvancedMode) {
-                    snackBarHost.showSnackbar("Advanced Mode: ${viewModel.adbStatus}")
                 }
             }
 
             // collect flow for standard logs
             LaunchedEffect(viewModel.output) {
                 viewModel.output.collect { line ->
-                    if (isAdvancedMode) return@collect
-
                     val raw = line.output
                     if (line.type != QuickShellViewModel.OutputType.TYPE_SPACE && raw.isBlank()) return@collect
 
@@ -282,18 +252,11 @@ fun QuickShellScreen(navigator: DestinationsNavigator, viewModelGlobal: ViewMode
                 }
             }
 
-            if (isAdvancedMode) {
-                AdvancedTerminalView(viewModel)
-            } else {
-                StandardLogView(logs, listState)
-            }
+            StandardLogView(logs, listState)
 
             // Bottom controls for Standard Mode
-            AnimatedVisibility(
-                visible = !isAdvancedMode,
-                modifier = Modifier.align(Alignment.BottomCenter),
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+            Box(
+                modifier = Modifier.align(Alignment.BottomCenter)
             ) {
                 StandardBottomControls(viewModel, keyboardVisible)
             }
@@ -390,188 +353,6 @@ fun StandardBottomControls(viewModel: QuickShellViewModel, keyboardVisible: Bool
     }
 }
 
-@Composable
-fun AdvancedTerminalView(viewModel: QuickShellViewModel) {
-    val emulator = viewModel.terminalEmulator
-    val lines = emulator.outputLines
-    val cursorRow = emulator.cursorRow
-    val cursorCol = emulator.cursorCol
-
-    val focusRequester = remember { FocusRequester() }
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val scrollState = rememberScrollState()
-
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-        keyboardController?.show()
-    }
-
-    // Auto-scroll to bottom when content changes
-    LaunchedEffect(emulator.revision, cursorRow) {
-        scrollState.animateScrollTo(scrollState.maxValue)
-    }
-
-    var textFieldValue by remember { mutableStateOf(TextFieldValue("")) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF000000))
-    ) {
-        // Status bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "ADB: ${viewModel.adbStatus}",
-                color = if (viewModel.adbStatus == "Connected") Color.Green else Color.Red,
-                style = MaterialTheme.typography.labelSmall,
-                fontFamily = FontFamily.Monospace
-            )
-            IconButton(
-                onClick = { viewModel.toggleAdvancedMode() },
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(Icons.Filled.Terminal, null, tint = Color.White, modifier = Modifier.size(16.dp))
-            }
-        }
-
-        BoxWithConstraints(
-            modifier = Modifier
-                .weight(1f)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    focusRequester.requestFocus()
-                }
-                .focusRequester(focusRequester)
-                .focusable()
-        ) {
-            val density = LocalDensity.current
-            val charWidth = with(density) { 7.2.sp.toDp() } // Approximate for 12sp monospace
-            val charHeight = with(density) { 14.sp.toDp() }
-
-            val cols = (maxWidth / charWidth).toInt().coerceAtLeast(10)
-            val rows = (maxHeight / charHeight).toInt().coerceAtLeast(10)
-
-            LaunchedEffect(cols, rows) {
-                viewModel.terminalEmulator.resize(rows, cols)
-            }
-
-            // Real input view instead of hidden TextField
-            AndroidView(
-                factory = { ctx ->
-                    TerminalInputView(ctx).apply {
-                        onTextInput = { text -> viewModel.sendInput(text) }
-                        onActionKey = { keyCode ->
-                            when (keyCode) {
-                                android.view.KeyEvent.KEYCODE_ENTER -> viewModel.sendInput("\n")
-                                android.view.KeyEvent.KEYCODE_DEL -> viewModel.sendRaw(byteArrayOf(0x7f))
-                                android.view.KeyEvent.KEYCODE_TAB -> viewModel.sendInput("\t")
-                                android.view.KeyEvent.KEYCODE_DPAD_UP -> viewModel.sendInput("\u001b[A")
-                                android.view.KeyEvent.KEYCODE_DPAD_DOWN -> viewModel.sendInput("\u001b[B")
-                                android.view.KeyEvent.KEYCODE_DPAD_LEFT -> viewModel.sendInput("\u001b[D")
-                                android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> viewModel.sendInput("\u001b[C")
-                            }
-                        }
-                    }
-                },
-                update = { view ->
-                    if (viewModel.isAdvancedMode) view.requestTerminalFocus()
-                },
-                modifier = Modifier.size(0.dp)
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(4.dp)
-            ) {
-                lines.forEachIndexed { index, line ->
-                    TerminalLine(
-                        line = line,
-                        isCursorLine = index == cursorRow,
-                        cursorCol = cursorCol
-                    )
-                }
-            }
-        }
-
-        // Control Panel
-        TerminalControlPanel(
-            onKeyPress = { key ->
-                viewModel.sendSpecialKey(key)
-            },
-            onHistoryNavigate = { up ->
-                // History navigate via special keys or handled in ViewModel
-            },
-            isCtrlPressed = viewModel.isCtrlPressed,
-            isAltPressed = viewModel.isAltPressed,
-            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainer)
-        )
-    }
-}
-
-@Composable
-fun TerminalLine(line: AnnotatedString, isCursorLine: Boolean, cursorCol: Int) {
-    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-
-    Box {
-        BasicText(
-            text = line,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontFamily = FontFamily.Monospace,
-                color = Color(0xFFE5E5E5),
-                fontSize = 12.sp,
-                lineHeight = 14.sp
-            ),
-            onTextLayout = { textLayoutResult = it }
-        )
-        if (isCursorLine) {
-            val cursorOffset = if (textLayoutResult != null) {
-                if (cursorCol in 0 until line.length) {
-                    textLayoutResult?.getHorizontalPosition(cursorCol, true) ?: 0f
-                } else {
-                    textLayoutResult?.getLineRight(0) ?: 0f
-                }
-            } else 0f
-
-            val density = LocalDensity.current
-            BlinkingCursor(
-                offset = with(density) { cursorOffset.toDp() },
-                height = with(density) { 14.sp.toDp() }
-            )
-        }
-    }
-}
-
-@Composable
-fun BlinkingCursor(offset: Dp, height: Dp) {
-    val infiniteTransition = rememberInfiniteTransition(label = "cursor")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "alpha"
-    )
-
-    Box(
-        Modifier
-            .padding(start = offset)
-            .width(8.dp)
-            .height(height)
-            .background(Color.White.copy(alpha = alpha))
-    )
-}
 
 @Composable
 fun KeyboardVisibilityListener(onKeyboardState: (visible: Boolean) -> Unit) {
